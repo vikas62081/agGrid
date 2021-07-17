@@ -8,7 +8,7 @@ const App = () => {
   const [gridApi, setGridApi] = useState(null);
 
   const columns = [
-    { headerName: "Athlete", field: "athlete", filter: "agTextColumnFilter" },
+    { headerName: "Athlete", field: "athlete", filter: "agTextColumnFilter",cellRenderer:'loading' },
     { headerName: "Age", field: "age", filter: "agTextColumnFilter" },
     { headerName: "Country", field: "country", filter: "agTextColumnFilter" },
     { headerName: "Year", field: "year", filter: "agTextColumnFilter" },
@@ -21,8 +21,8 @@ const App = () => {
   ]
   const datasource = {
     getRows(params) {
-      console.log(JSON.stringify(params.request, null, 1));
-      const { startRow, endRow, filterModel, sortModel } = params.request
+      console.log(JSON.stringify(params, null, 1));
+      const { startRow, endRow, filterModel, sortModel } = params
       let url = `http://localhost:4000/olympic?`
       //Sorting
       if (sortModel.length) {
@@ -51,21 +51,30 @@ const App = () => {
   const onGridReady = (params) => {
     setGridApi(params);
     // register datasource with the grid
-    params.api.setServerSideDatasource(datasource);
+    params.api.setDatasource(datasource);
   }
-
+const components={
+  loading:(params)=>{
+    if(params.value!==undefined){
+      return params.value
+    }else{
+      return "<img src='https://www.ag-grid.com/example-assets/loading.gif'/>"
+    }
+  }
+}
   return (
     <div>
       <h1 align="center">React-App</h1>
-      <h4 align='center'>Implement Server-Side Pagination, Filter and Sorting in ag Grid</h4>
-      <div className="ag-theme-alpine">
+      <h4 align='center'>Implement Infinite Scroll in ag Grid</h4>
+      <div className="ag-theme-alpine" style={{height:400}}>
         <AgGridReact
           columnDefs={columns}
-          pagination={true}
-          paginationPageSize={8}
-          domLayout="autoHeight"
-          rowModelType="serverSide"
+          // pagination={true}
+          // paginationPageSize={8}
+          // domLayout="autoHeight"
+          rowModelType="infinite"
           onGridReady={onGridReady}
+          components={components}
           defaultColDef={{ filter: true, floatingFilter: true, sortable: true }}
         />
       </div>
