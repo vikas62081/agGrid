@@ -1,12 +1,12 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-enterprise';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-alpine.css';
-
+import _ from 'lodash'
 const App = () => {
   const [gridApi, setGridApi] = useState(null);
-
+  const [searchText, setSearchText] = useState('')
   const columns = [
     { headerName: "Athlete", field: "athlete", filter: "agTextColumnFilter" },
     { headerName: "Age", field: "age", filter: "agTextColumnFilter" },
@@ -19,11 +19,27 @@ const App = () => {
     { headerName: "Bronze", field: 'bronze', filter: "agTextColumnFilter" },
     { headerName: "Total", field: 'total', filter: "agTextColumnFilter" },
   ]
+
+  useEffect(() => {
+    // console.log(searchText)
+    if (gridApi) {
+      onGridReady(gridApi)
+    }
+  }, [searchText])
+
+  const search = _.debounce((text) => {
+    // console.log(text)
+    setSearchText(text)
+  }, 1000)
   const datasource = {
     getRows(params) {
       console.log(JSON.stringify(params.request, null, 1));
       const { startRow, endRow, filterModel, sortModel } = params.request
       let url = `http://localhost:4000/olympic?`
+      //Quick filter
+      if (searchText) {
+        url += `q=${searchText}&`
+      }
       //Sorting
       if (sortModel.length) {
         const { colId, sort } = sortModel[0]
@@ -47,7 +63,7 @@ const App = () => {
         })
     }
   };
-  
+
   const onGridReady = (params) => {
     setGridApi(params);
     // register datasource with the grid
@@ -57,7 +73,9 @@ const App = () => {
   return (
     <div>
       <h1 align="center">React-App</h1>
-      <h4 align='center'>Implement Server-Side Pagination, Filter and Sorting in ag Grid</h4>
+      <h4 align='center'>Implement Server-Side Quick Filter in ag Grid</h4>
+      <input type="search" placeholder="Search something..." onChange={e => search(e.target.value)}
+        style={{ padding: 10, fontSize: "105%", width: "100%", outline: 0 }} />
       <div className="ag-theme-alpine">
         <AgGridReact
           columnDefs={columns}
